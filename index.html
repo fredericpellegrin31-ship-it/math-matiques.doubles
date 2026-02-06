@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Multiplicateur Galactique</title>
+    <title>L'Espace des Doubles & Moitiés</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -39,15 +39,17 @@
             border-bottom-right-radius: 20px;
             pointer-events: auto;
             width: 90%;
-            max-width: 400px;
-            min-width: 280px;
+            max-width: 500px;
+            min-width: 320px;
         }
-        #target-number {
-            font-size: 3rem;
+        #target-question {
+            font-size: 2.5rem;
             font-weight: bold;
             color: #ffde59;
             text-shadow: 0 0 15px rgba(255, 222, 89, 0.6);
-            line-height: 1;
+            line-height: 1.2;
+            margin-top: 5px;
+            white-space: nowrap;
         }
         .btn {
             pointer-events: auto;
@@ -114,8 +116,8 @@
 
         <div class="hud-container">
             <div class="hud-panel flex flex-col items-center shadow-lg border border-gray-700">
-                <div class="text-xs uppercase tracking-widest text-gray-400">Trouve le produit pour :</div>
-                <div id="target-number">0</div>
+                <div class="text-xs uppercase tracking-widest text-gray-400">Mission en cours :</div>
+                <div id="target-question">PRÊT ?</div>
                 <div class="flex justify-between w-full mt-2 px-4">
                     <div class="text-sm">Score: <span id="score-val" class="font-bold text-green-400">0</span></div>
                     <div class="text-sm">Vies: <span id="lives-val" class="font-bold text-red-400">3</span></div>
@@ -128,24 +130,28 @@
 
         <div id="overlay" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 pointer-events-auto hidden z-40">
             <div class="text-center p-6 md:p-8 bg-gray-900 border-2 border-yellow-500 rounded-2xl max-w-md w-11/12 mx-auto shadow-2xl overflow-y-auto max-h-screen">
-                <h1 class="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-yellow-400 mb-2 filter drop-shadow-md">Multiplicateur Galactique</h1>
+                <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400 mb-2 filter drop-shadow-md">Espace Doubles & Moitiés</h1>
                 <h2 id="overlay-title" class="text-xl md:text-2xl font-bold text-yellow-500 mb-6">PRÊT À DÉCOLLER ?</h2>
                 
                 <div class="mb-6 text-left">
-                    <label class="text-gray-400 text-sm uppercase tracking-wide mb-2 block font-semibold">Choisis ta difficulté :</label>
+                    <label class="text-gray-400 text-sm uppercase tracking-wide mb-2 block font-semibold">Choisis ta mission :</label>
                     <select id="difficulty-select" class="shadow-inner cursor-pointer">
-                        <option value="CE1">Niveau 1 : Tables 1, 2, 5, 10</option>
-                        <option value="CE2" selected>Niveau 2 : Tables 2 à 9</option>
-                        <option value="CM1">Niveau 3 : Tables 2 à 10</option>
-                        <option value="CM2">Niveau 4 : Tables 2 à 12</option>
+                        <option value="N1" selected>Niveau 1 : Doubles (1-10) & Moitiés (1-20)</option>
+                        <option value="N2">Niveau 2 : Doubles (1-20) & Moitiés (1-40)</option>
+                        <option value="N3">Niveau 3 : Doubles (1-50) & Moitiés (1-100)</option>
+                        <option value="AMIS">Bonus : Les Amis de 10</option>
                     </select>
                 </div>
 
-                <p id="overlay-msg" class="text-gray-300 mb-8 bg-gray-800 p-4 rounded-lg text-sm leading-relaxed text-left md:text-center">
-                    Pilote ton vaisseau et détruis les astéroïdes qui contiennent la <b>bonne multiplication</b>.<br>
-                    <span class="text-yellow-400 block mt-2">Objectif : Score maximum en 3 minutes.</span>
-                </p>
-                <button id="start-btn" class="btn bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white px-8 py-4 rounded-full font-bold text-lg md:text-xl uppercase shadow-lg w-full transform transition hover:-translate-y-1">Lancer la mission</button>
+                <div id="overlay-msg" class="text-gray-300 mb-8 bg-gray-800 p-4 rounded-lg text-sm leading-relaxed text-left">
+                    <p class="mb-2">Pilote ton vaisseau et détruis les astéroïdes contenant la <b>bonne réponse</b>.</p>
+                    <ul class="list-disc list-inside text-gray-400 mb-4 text-xs">
+                        <li>Utilise les <b>FLÈCHES</b> pour bouger.</li>
+                        <li>Appuie sur <b>ESPACE</b> pour tirer.</li>
+                    </ul>
+                    <span class="text-yellow-400 block text-center mt-2 font-bold">Objectif : Score max en 3 minutes !</span>
+                </div>
+                <button id="start-btn" class="btn bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-full font-bold text-lg md:text-xl uppercase shadow-lg w-full transform transition hover:-translate-y-1">Lancer la mission</button>
             </div>
         </div>
     </div>
@@ -156,7 +162,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let droneNodes = [];
 
-        // --- GESTION DU FOND ÉTOILÉ (NOUVEAU) ---
+        // --- GESTION DU FOND ÉTOILÉ ---
         const stars = [];
         const numStars = 100;
 
@@ -166,8 +172,8 @@
                 stars.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    size: Math.random() * 2 + 0.5, // Taille variable
-                    speed: Math.random() * 5 + 1 // Vitesse variable pour effet de profondeur
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 5 + 1 
                 });
             }
         }
@@ -175,7 +181,6 @@
         function updateStars() {
             stars.forEach(star => {
                 star.y += star.speed;
-                // Si l'étoile sort en bas, elle revient en haut
                 if(star.y > window.innerHeight) {
                     star.y = 0;
                     star.x = Math.random() * window.innerWidth;
@@ -186,7 +191,7 @@
         function drawStars(ctx) {
             ctx.fillStyle = "white";
             stars.forEach(star => {
-                ctx.globalAlpha = Math.random() * 0.5 + 0.3; // Scintillement léger
+                ctx.globalAlpha = Math.random() * 0.5 + 0.3;
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
                 ctx.fill();
@@ -268,7 +273,7 @@
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const targetEl = document.getElementById('target-number');
+        const targetQuestionEl = document.getElementById('target-question');
         const scoreEl = document.getElementById('score-val');
         const livesEl = document.getElementById('lives-val');
         const timerBar = document.getElementById('timer-bar');
@@ -280,25 +285,25 @@
         const difficultySelect = document.getElementById('difficulty-select');
 
         const DIFFICULTY_SETTINGS = {
-            'CE1': { speedMod: 0.8, interval: 2200 },
-            'CE2': { speedMod: 1.0, interval: 1800 },
-            'CM1': { speedMod: 1.2, interval: 1600 },
-            'CM2': { speedMod: 1.4, interval: 1400 }
+            'N1': { speedMod: 0.8, interval: 2200 },
+            'N2': { speedMod: 1.0, interval: 1800 },
+            'N3': { speedMod: 1.2, interval: 1600 },
+            'AMIS': { speedMod: 1.0, interval: 1800 }
         };
 
-        let currentDifficulty = 'CE2';
+        let currentDifficulty = 'N1';
         let gameState = 'START'; 
         let score = 0;
         let lives = 3;
-        let targetValue = 0;
+        let targetValue = 0; // La réponse attendue (le nombre)
         let timeLeft = 180;
         let lastTime = 0;
         let meteorTimer = 0;
         let meteorInterval = 1800; 
 
         const player = {
-            x: 0, y: 0, w: 60, h: 50, speed: 6,
-            img: new Image(), targetX: 0, targetY: 0, isMovingToTouch: false
+            x: 0, y: 0, w: 60, h: 50, speed: 8, // Augmenté pour le clavier
+            img: new Image()
         };
         player.img.src = ASSETS.ship;
 
@@ -317,23 +322,21 @@
         const floatingTexts = [];
 
         const keys = {};
-        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            // Tir avec Espace
+            if (e.code === 'Space' && gameState === 'PLAYING') {
+                fireLaser();
+            }
+        });
         window.addEventListener('keyup', e => keys[e.code] = false);
 
-        canvas.addEventListener('pointerdown', handlePointer);
-        canvas.addEventListener('pointermove', handlePointer);
-        function handlePointer(e) {
-            if (gameState !== 'PLAYING') return;
-            player.targetX = e.clientX;
-            player.targetY = e.clientY;
-            player.isMovingToTouch = true;
-            if (e.type === 'pointerdown') fireLaser();
-        }
-        canvas.addEventListener('pointerup', () => player.isMovingToTouch = false);
+        // Suppression des écouteurs tactiles/souris pour le mouvement
+        // Plus de pointerdown/move
 
         function init() {
             resize();
-            initStars(); // Initialiser les étoiles
+            initStars(); 
             player.x = canvas.width / 2;
             player.y = canvas.height - 100;
             overlay.classList.remove('hidden');
@@ -344,61 +347,74 @@
             canvas.height = window.innerHeight;
             if(player.x > canvas.width) player.x = canvas.width - player.w;
             if(player.y > canvas.height) player.y = canvas.height - player.h;
-            // On réinitialise les étoiles au redimensionnement pour éviter les trous
             if (gameState === 'START') initStars();
         }
         window.addEventListener('resize', resize);
 
-        function getRandomPair() {
-            let a, b;
-            if (currentDifficulty === 'CE1') {
-                const set = [1, 2, 5, 10];
-                a = set[Math.floor(Math.random() * set.length)];
-                b = Math.floor(Math.random() * 10) + 1;
-            } else if (currentDifficulty === 'CE2') {
-                a = Math.floor(Math.random() * 8) + 2; 
-                b = Math.floor(Math.random() * 8) + 2;
-            } else if (currentDifficulty === 'CM1') {
-                a = Math.floor(Math.random() * 9) + 2; 
-                b = Math.floor(Math.random() * 9) + 2;
-            } else {
-                a = Math.floor(Math.random() * 11) + 2; 
-                b = Math.floor(Math.random() * 11) + 2;
-            }
-            return Math.random() > 0.5 ? [a, b] : [b, a];
-        }
+        // --- NOUVELLE LOGIQUE DE JEU ---
 
         function generateNewTarget() {
-            const pair = getRandomPair();
-            targetValue = pair[0] * pair[1];
-            targetEl.textContent = targetValue;
+            let type = ''; // 'DOUBLE', 'HALF', 'AMIS'
+            let number = 0;
+            let questionText = "";
+
+            if (currentDifficulty === 'AMIS') {
+                type = 'AMIS';
+                // Amis de 10 : X + ? = 10
+                number = Math.floor(Math.random() * 11); // 0 à 10
+                targetValue = 10 - number;
+                questionText = `${number} + ? = 10`;
+            } else {
+                // Pour les autres niveaux, on mixe Doubles et Moitiés
+                type = Math.random() > 0.5 ? 'DOUBLE' : 'HALF';
+
+                if (type === 'DOUBLE') {
+                    let max = 10;
+                    if (currentDifficulty === 'N2') max = 20;
+                    if (currentDifficulty === 'N3') max = 50;
+                    number = Math.floor(Math.random() * max) + 1;
+                    targetValue = number * 2;
+                    questionText = `Double de ${number}`;
+                } else {
+                    // Moitiés
+                    let maxPair = 20;
+                    if (currentDifficulty === 'N2') maxPair = 40;
+                    if (currentDifficulty === 'N3') maxPair = 100;
+                    // On génère un nombre pair
+                    number = (Math.floor(Math.random() * (maxPair/2)) + 1) * 2;
+                    targetValue = number / 2;
+                    questionText = `Moitié de ${number}`;
+                }
+            }
+
+            targetQuestionEl.textContent = questionText;
         }
 
         function spawnMeteor() {
             const size = 80 + Math.random() * 40;
-            let valA, valB, isCorrect;
+            let displayValue, isCorrect;
             
+            // 30% de chance d'avoir la bonne réponse
             if (Math.random() > 0.7) {
-                const factors = [];
-                for(let i=1; i<=targetValue; i++) {
-                    if(targetValue % i === 0) {
-                        let f1 = i;
-                        let f2 = targetValue / i;
-                        if (f1 <= 12 && f2 <= 12) factors.push(f1);
-                    }
+                displayValue = targetValue;
+                isCorrect = true;
+            } else {
+                isCorrect = false;
+                // Génération de mauvaises réponses crédibles (distracteurs)
+                const offset = Math.floor(Math.random() * 5) + 1;
+                const sign = Math.random() > 0.5 ? 1 : -1;
+                
+                // On essaie de piéger (ex: moitié au lieu de double)
+                if (Math.random() > 0.8 && targetValue % 2 === 0) {
+                     displayValue = targetValue / 2; // Piège de la moitié
+                } else if (Math.random() > 0.8) {
+                     displayValue = targetValue * 2; // Piège du double
+                } else {
+                     displayValue = Math.max(0, targetValue + (offset * sign));
                 }
                 
-                if (factors.length > 0) {
-                    valA = factors[Math.floor(Math.random() * factors.length)];
-                    valB = targetValue / valA;
-                    isCorrect = true;
-                } else {
-                    const p = getRandomPair(); valA=p[0]; valB=p[1]; isCorrect = (valA*valB === targetValue);
-                }
-            } else {
-                const pair = getRandomPair();
-                valA = pair[0]; valB = pair[1];
-                isCorrect = (valA * valB === targetValue);
+                // Éviter que le distracteur soit égal à la cible par hasard
+                if (displayValue === targetValue) displayValue = targetValue + 1;
             }
 
             const settings = DIFFICULTY_SETTINGS[currentDifficulty];
@@ -411,17 +427,16 @@
                 h: size,
                 speed: baseSpeed * settings.speedMod,
                 rotation: 0,
-                // MODIFICATION ICI : Vitesse de rotation augmentée pour être plus visible
                 rotSpeed: (Math.random() - 0.5) * 0.15, 
                 img: meteorImages[Math.floor(Math.random() * meteorImages.length)],
-                label: `${valA} × ${valB}`,
-                value: valA * valB,
+                label: `${displayValue}`, // Affiche juste le nombre
+                value: displayValue,
                 isCorrect: isCorrect
             });
         }
 
         function fireLaser() {
-            lasers.push({ x: player.x, y: player.y - 20, w: 9, h: 33, speed: 10 });
+            lasers.push({ x: player.x, y: player.y - 20, w: 9, h: 33, speed: 12 });
             playLaserSound();
         }
 
@@ -430,16 +445,15 @@
         }
 
         function createExplosion(x, y, color) {
-            // MODIFICATION ICI : Plus de particules, tailles variées et vitesse plus grande
             for (let i = 0; i < 30; i++) { 
                 particles.push({
                     x, y,
-                    vx: (Math.random() - 0.5) * 15, // Plus explosif
+                    vx: (Math.random() - 0.5) * 15, 
                     vy: (Math.random() - 0.5) * 15,
                     life: 1,
-                    decay: 0.02 + Math.random() * 0.03, // Durée de vie aléatoire
+                    decay: 0.02 + Math.random() * 0.03,
                     color: color,
-                    size: Math.random() * 5 + 2 // Particules de différentes tailles
+                    size: Math.random() * 5 + 2 
                 });
             }
         }
@@ -447,23 +461,19 @@
         function update(deltaTime) {
             if (gameState !== 'PLAYING') return;
 
-            updateStars(); // Mise à jour du fond étoilé
+            updateStars(); 
 
             timeLeft -= deltaTime / 1000;
             if (timeLeft <= 0) { timeLeft = 0; endGame("TEMPS ÉCOULÉ !"); }
             
             timerBar.style.width = `${(timeLeft / 180) * 100}%`;
 
+            // Mouvement Clavier Seulement
             if (keys['ArrowLeft'] && player.x > player.w/2) player.x -= player.speed;
             if (keys['ArrowRight'] && player.x < canvas.width - player.w/2) player.x += player.speed;
             if (keys['ArrowUp'] && player.y > player.h/2) player.y -= player.speed;
             if (keys['ArrowDown'] && player.y < canvas.height - player.h/2) player.y += player.speed;
             
-            if (player.isMovingToTouch) {
-                player.x += (player.targetX - player.x) * 0.15;
-                player.y += ((player.targetY - 60) - player.y) * 0.15;
-            }
-
             for (let i = lasers.length - 1; i >= 0; i--) {
                 lasers[i].y -= lasers[i].speed;
                 if (lasers[i].y < -50) lasers.splice(i, 1);
@@ -478,7 +488,7 @@
             for (let i = meteors.length - 1; i >= 0; i--) {
                 const m = meteors[i];
                 m.y += m.speed;
-                m.rotation += m.rotSpeed; // Rotation appliquée ici
+                m.rotation += m.rotSpeed; 
 
                 if (m.y > canvas.height + m.h) {
                     meteors.splice(i, 1);
@@ -523,7 +533,7 @@
 
             particles.forEach((p, i) => {
                 p.x += p.vx; p.y += p.vy; 
-                p.life -= p.decay; // Utilisation de decay pour une disparition plus naturelle
+                p.life -= p.decay; 
                 if (p.life <= 0) particles.splice(i, 1);
             });
             floatingTexts.forEach((t, i) => {
@@ -535,7 +545,6 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Dessin des étoiles en premier plan (fond)
             drawStars(ctx);
 
             lasers.forEach(l => ctx.drawImage(laserImg, l.x - l.w/2, l.y - l.h/2, l.w, l.h));
@@ -550,19 +559,18 @@
                 ctx.drawImage(m.img, -m.w/2, -m.h/2, m.w, m.h);
                 ctx.restore();
                 ctx.fillStyle = "white";
-                ctx.font = "bold 22px Arial";
+                ctx.font = "bold 30px Arial"; // Plus gros pour les nombres
                 ctx.textAlign = "center";
                 ctx.strokeStyle = "black";
                 ctx.lineWidth = 4;
-                // Le texte suit la position mais ne tourne pas avec le météore pour rester lisible
-                ctx.strokeText(m.label, m.x + m.w/2, m.y + m.h/2 + 8);
-                ctx.fillText(m.label, m.x + m.w/2, m.y + m.h/2 + 8);
+                ctx.strokeText(m.label, m.x + m.w/2, m.y + m.h/2 + 10);
+                ctx.fillText(m.label, m.x + m.w/2, m.y + m.h/2 + 10);
             });
             particles.forEach(p => {
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
                 ctx.beginPath(); 
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); // Utilisation de la taille variable
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); 
                 ctx.fill();
             });
             ctx.globalAlpha = 1;
@@ -604,7 +612,7 @@
             gameState = 'GAMEOVER';
             stopSpaceAmbience();
             overlayTitle.textContent = reason;
-            overlayMsg.innerHTML = `MISSION TERMINÉE !<br><br><b>Score Final : ${score}</b><br>Continue tes efforts !`;
+            overlayMsg.innerHTML = `<div class="text-center">MISSION TERMINÉE !<br><br><b>Score Final : ${score}</b><br>Continue tes efforts !</div>`;
             startBtn.textContent = "REESSAYER";
             overlay.classList.remove('hidden');
         }
@@ -613,7 +621,7 @@
             gameState = 'START';
             stopSpaceAmbience();
             overlayTitle.textContent = "PAUSE";
-            overlayMsg.innerHTML = `Partie interrompue.<br><br><b>Score actuel : ${score}</b>`;
+            overlayMsg.innerHTML = `<div class="text-center">Partie interrompue.<br><br><b>Score actuel : ${score}</b></div>`;
             startBtn.textContent = "REPRENDRE / REJOUER";
             overlay.classList.remove('hidden');
         });
