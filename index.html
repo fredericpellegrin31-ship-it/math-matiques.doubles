@@ -14,6 +14,8 @@
         .hidden { display: none !important; }
         .target-box { background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; padding: 10px 30px; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px #3b82f6; min-width: 300px; text-align: center; }
         .controls-hint { margin-top: 20px; color: #94a3b8; font-size: 0.9rem; text-align: center; }
+        #time-bar-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 300px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; overflow: hidden; border: 1px solid #3b82f6; }
+        #time-bar-fill { height: 100%; width: 100%; background: #3b82f6; transition: width 0.1s linear; }
     </style>
 </head>
 <body>
@@ -24,6 +26,11 @@
             <div id="target-display" class="target-box">CHARGEZ...</div>
             <div class="hud-panel">VIES: <span id="lives" class="text-red-500 font-bold">3</span></div>
         </div>
+
+        <div id="time-bar-container">
+            <div id="time-bar-fill"></div>
+        </div>
+
         <button id="home-btn" class="absolute bottom-4 left-4 p-3 bg-gray-800 rounded-full border border-white/30 pointer-events-auto">🏠 MENU</button>
     </div>
 
@@ -65,6 +72,7 @@
         const scoreEl = document.getElementById('score');
         const livesEl = document.getElementById('lives');
         const targetEl = document.getElementById('target-display');
+        const timeFillEl = document.getElementById('time-bar-fill');
         const overlay = document.getElementById('overlay');
         const startBtn = document.getElementById('start-btn');
         const homeBtn = document.getElementById('home-btn');
@@ -115,6 +123,9 @@
         let meteors = [], lasers = [];
         let ship = { x: 0, y: 0, w: 60, h: 60, speed: 7 };
         let lastMeteorTime = 0;
+        let gameTimeMax = 120; // 2 minutes
+        let gameTimeCurrent = 120;
+        let lastTimeUpdate = 0;
         const keys = {};
 
         function resize() {
@@ -149,22 +160,15 @@
                 targetAnswer = 10 - n;
                 question = `${n} + ? = 10`;
             } else if (mode === "doubles") {
-                let n;
-                // On s'assure que le double ne dépasse pas le max choisi
-                n = Math.floor(Math.random() * (max / 2)) + 1;
+                let n = Math.floor(Math.random() * (max / 2)) + 1;
                 targetAnswer = n * 2;
                 question = `Double de ${n}`;
             } else if (mode === "moities") {
-                let n;
-                // On choisit un nombre pair dont la moitié est <= max
-                // Si max est 100, on peut aller jusqu'à 100 (moitié de 200), 
-                // mais restons sur des nombres dont le résultat est dans la plage.
                 let resultMax = max;
                 targetAnswer = Math.floor(Math.random() * resultMax) + 1;
-                n = targetAnswer * 2;
+                let n = targetAnswer * 2;
                 question = `Moitié de ${n}`;
             }
-
             targetEl.textContent = question;
         }
 
@@ -191,8 +195,17 @@
             });
         }
 
-        function update() {
+        function update(deltaTime) {
             if (gameState !== 'PLAYING') return;
+
+            // Temps
+            gameTimeCurrent -= deltaTime / 1000;
+            const progress = (gameTimeCurrent / gameTimeMax) * 100;
+            timeFillEl.style.width = Math.max(0, progress) + '%';
+            if (gameTimeCurrent <= 0) {
+                endGame("TEMPS ÉCOULÉ !");
+                return;
+            }
 
             // Mouvements clavier
             if (keys['ArrowLeft'] && ship.x > 0) ship.x -= ship.speed;
@@ -213,6 +226,9 @@
             }
 
             // Meteors
+            let meteorToRemove = -1;
+            let laserToRemove = -1;
+
             for (let i = meteors.length - 1; i >= 0; i--) {
                 let m = meteors[i];
                 m.y += m.speed;
@@ -221,10 +237,10 @@
                 if (ship.x < m.x + m.w && ship.x + ship.w > m.x && ship.y < m.y + m.h && ship.y + ship.h > m.y) {
                     lives--;
                     livesEl.textContent = lives;
-                    meteors.splice(i, 1);
                     playExplosionSound();
+                    meteorToRemove = i;
                     if (lives <= 0) endGame("VAISSEAU DÉTRUIT !");
-                    continue;
+                    break;
                 }
 
                 // Collision Laser
@@ -236,22 +252,24 @@
                             scoreEl.textContent = score;
                             playExplosionSound();
                             generateNewTarget();
-                            meteors = []; // Efface les autres pour le nouveau calcul
+                            meteors = []; // Efface tous les météores en cas de réussite
+                            laserToRemove = j;
                         } else {
-                            // Erreur : on perd une vie et le météore explose quand même
                             lives--;
                             livesEl.textContent = lives;
                             playExplosionSound();
+                            meteorToRemove = i;
+                            laserToRemove = j;
                         }
-                        lasers.splice(j, 1);
-                        meteors.splice(i, 1);
                         if (lives <= 0) endGame("ERREUR DE CALCUL !");
                         break;
                     }
                 }
 
+                if (meteorToRemove !== -1 || laserToRemove !== -1) break;
+
                 // Sortie d'écran
-                if (m && m.y > canvas.height) {
+                if (m.y > canvas.height) {
                     if (m.value === targetAnswer) {
                         lives--;
                         livesEl.textContent = lives;
@@ -259,11 +277,19 @@
                     }
                     meteors.splice(i, 1);
                     if (lives <= 0) endGame("CIBLE MANQUÉE !");
+                    break;
                 }
             }
+
+            // Nettoyage sécurisé
+            if (meteorToRemove !== -1) meteors.splice(meteorToRemove, 1);
+            if (laserToRemove !== -1) lasers.splice(laserToRemove, 1);
         }
 
-        function draw() {
+        function draw(timestamp) {
+            const deltaTime = timestamp - lastTimeUpdate;
+            lastTimeUpdate = timestamp;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Ship
@@ -284,13 +310,14 @@
                 ctx.shadowBlur = 0;
             });
 
-            update();
+            if (gameState === 'PLAYING') update(deltaTime || 0);
             requestAnimationFrame(draw);
         }
 
         function startGame() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             score = 0; lives = 3;
+            gameTimeCurrent = gameTimeMax;
             scoreEl.textContent = score;
             livesEl.textContent = lives;
             meteors = []; lasers = [];
@@ -315,7 +342,8 @@
             overlay.classList.remove('hidden');
         });
 
-        draw();
+        requestAnimationFrame(draw);
     </script>
 </body>
 </html>
+
