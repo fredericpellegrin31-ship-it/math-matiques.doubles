@@ -2,17 +2,18 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Calcul Mental - CE1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0b0e14; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background-color: #0b0e14; font-family: 'Segoe UI', sans-serif; }
         canvas { display: block; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; z-index: 10; }
-        .hud-panel { background: rgba(0, 0, 0, 0.7); padding: 10px 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; border: 1px solid #3b82f6; pointer-events: auto; }
-        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
+        .hud-panel { background: rgba(0, 0, 0, 0.7); padding: 10px 20px; border: 1px solid #3b82f6; pointer-events: auto; border-radius: 0 0 15px 15px; }
+        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
         .hidden { display: none !important; }
-        .target-box { background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; padding: 10px 30px; margin: 10px; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px #3b82f6; }
+        .target-box { background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; padding: 10px 30px; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px #3b82f6; min-width: 300px; text-align: center; }
+        .controls-hint { margin-top: 20px; color: #94a3b8; font-size: 0.9rem; text-align: center; }
     </style>
 </head>
 <body>
@@ -20,35 +21,40 @@
     <div id="ui-layer">
         <div class="flex justify-between p-4">
             <div class="hud-panel">SCORE: <span id="score" class="text-yellow-400 font-bold">0</span></div>
-            <div id="target-display" class="target-box">PRÊT ?</div>
+            <div id="target-display" class="target-box">CHARGEZ...</div>
             <div class="hud-panel">VIES: <span id="lives" class="text-red-500 font-bold">3</span></div>
         </div>
-        <button id="home-btn" class="absolute bottom-4 left-4 p-3 bg-gray-800 rounded-full border border-white/30 pointer-events-auto">🏠</button>
+        <button id="home-btn" class="absolute bottom-4 left-4 p-3 bg-gray-800 rounded-full border border-white/30 pointer-events-auto">🏠 MENU</button>
     </div>
 
     <div id="overlay" class="menu-overlay">
-        <h1 id="overlay-title" class="text-5xl font-black text-blue-500 mb-6 tracking-tighter italic">MISSION CALCUL</h1>
-        <div id="overlay-msg" class="text-center text-xl mb-8 px-6">Choisis ta mission, pilote !</div>
+        <h1 id="overlay-title" class="text-5xl font-black text-blue-500 mb-6 italic tracking-tighter">MISSION CALCUL</h1>
+        <div id="overlay-msg" class="text-center text-xl mb-8 px-6">Préparez-vous, pilote !</div>
         
-        <div class="flex flex-col gap-4 mb-8 w-64 pointer-events-auto">
-            <label class="text-sm uppercase text-blue-300 font-bold">Type de Mission :</label>
-            <select id="mode-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white">
+        <div class="flex flex-col gap-4 mb-4 w-64 pointer-events-auto text-white">
+            <label class="text-xs uppercase text-blue-300 font-bold">Type de Mission :</label>
+            <select id="mode-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg">
                 <option value="complements">Compléments à 10</option>
                 <option value="doubles">Les Doubles</option>
                 <option value="moities">Les Moitiés</option>
             </select>
 
-            <label class="text-sm uppercase text-blue-300 font-bold">Niveau (Max) :</label>
-            <select id="difficulty-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white">
+            <label class="text-xs uppercase text-blue-300 font-bold">Niveau (Max) :</label>
+            <select id="difficulty-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg">
                 <option value="10">Jusqu'à 10</option>
                 <option value="20">Jusqu'à 20</option>
                 <option value="100">Jusqu'à 100</option>
             </select>
         </div>
 
-        <button id="start-btn" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xl rounded-full transition-transform active:scale-90 border-b-4 border-blue-800 pointer-events-auto">
+        <button id="start-btn" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xl rounded-full transition-all active:scale-95 border-b-4 border-blue-800 pointer-events-auto">
             LANCER LA MISSION
         </button>
+
+        <div class="controls-hint">
+            ⌨️ Utilisez les <b>FLÈCHES</b> pour bouger<br>
+            ⌨️ Touche <b>ESPACE</b> pour tirer
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -60,8 +66,6 @@
         const livesEl = document.getElementById('lives');
         const targetEl = document.getElementById('target-display');
         const overlay = document.getElementById('overlay');
-        const overlayTitle = document.getElementById('overlay-title');
-        const overlayMsg = document.getElementById('overlay-msg');
         const startBtn = document.getElementById('start-btn');
         const homeBtn = document.getElementById('home-btn');
         const modeSelect = document.getElementById('mode-select');
@@ -75,21 +79,66 @@
             'meteorBrown_big3.png', 'meteorBrown_big4.png'
         ].map(src => { const img = new Image(); img.src = src; return img; });
 
+        // Audio System (Synthesized)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playLaserSound() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playExplosionSound() {
+            const bufferSize = audioCtx.sampleRate * 0.2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start();
+        }
+
         let gameState = 'START';
         let score = 0, lives = 3, targetAnswer = 0;
-        let meteors = [], lasers = [], particles = [];
-        let ship = { x: 0, y: 0, w: 60, h: 60 };
+        let meteors = [], lasers = [];
+        let ship = { x: 0, y: 0, w: 60, h: 60, speed: 7 };
         let lastMeteorTime = 0;
+        const keys = {};
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ship.y = canvas.height - 80;
+            if (gameState === 'START') {
+                ship.x = canvas.width / 2 - ship.w / 2;
+                ship.y = canvas.height - 100;
+            }
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // LOGIQUE DE CALCUL
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => {
+            keys[e.code] = false;
+            if (e.code === 'Space' && gameState === 'PLAYING') fireLaser();
+        });
+
+        function fireLaser() {
+            lasers.push({ x: ship.x + ship.w / 2 - 4, y: ship.y, w: 9, h: 33 });
+            playLaserSound();
+        }
+
         function generateNewTarget() {
             const mode = modeSelect.value;
             const max = parseInt(difficultySelect.value);
@@ -101,15 +150,18 @@
                 question = `${n} + ? = 10`;
             } else if (mode === "doubles") {
                 let n;
-                if (max <= 20) n = Math.floor(Math.random() * (max/2)) + 1;
-                else n = Math.floor(Math.random() * 50) + 1;
+                // On s'assure que le double ne dépasse pas le max choisi
+                n = Math.floor(Math.random() * (max / 2)) + 1;
                 targetAnswer = n * 2;
                 question = `Double de ${n}`;
             } else if (mode === "moities") {
                 let n;
-                if (max <= 20) n = (Math.floor(Math.random() * (max/2)) + 1) * 2;
-                else n = (Math.floor(Math.random() * 50) + 1) * 2;
-                targetAnswer = n / 2;
+                // On choisit un nombre pair dont la moitié est <= max
+                // Si max est 100, on peut aller jusqu'à 100 (moitié de 200), 
+                // mais restons sur des nombres dont le résultat est dans la plage.
+                let resultMax = max;
+                targetAnswer = Math.floor(Math.random() * resultMax) + 1;
+                n = targetAnswer * 2;
                 question = `Moitié de ${n}`;
             }
 
@@ -117,13 +169,15 @@
         }
 
         function createMeteor() {
-            const size = 70;
-            // Une chance sur 3 que ce soit la bonne réponse
-            const isCorrect = Math.random() < 0.35;
+            const size = 80;
+            const isCorrect = Math.random() < 0.3;
             let val;
-            if (isCorrect) val = targetAnswer;
-            else {
-                val = Math.floor(Math.random() * (parseInt(difficultySelect.value) + 5));
+            const maxRange = parseInt(difficultySelect.value);
+
+            if (isCorrect) {
+                val = targetAnswer;
+            } else {
+                val = Math.floor(Math.random() * (maxRange + 10));
                 if (val === targetAnswer) val++;
             }
 
@@ -131,90 +185,82 @@
                 x: Math.random() * (canvas.width - size),
                 y: -size,
                 w: size, h: size,
-                speed: 2 + Math.random() * 2,
+                speed: 1.5 + Math.random() * 2,
                 value: val,
                 img: meteorImages[Math.floor(Math.random() * meteorImages.length)]
             });
         }
 
-        // TOUCH / MOUSE CONTROLS
-        const handleMove = (e) => {
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            ship.x = clientX - ship.w / 2;
-        };
-        const handleShoot = () => {
-            if (gameState === 'PLAYING') {
-                lasers.push({ x: ship.x + ship.w / 2 - 4, y: ship.y, w: 9, h: 33 });
-            }
-        };
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchstart', (e) => { handleMove(e); handleShoot(); });
-        window.addEventListener('mousedown', handleShoot);
-
-        function startGame() {
-            score = 0; lives = 3;
-            scoreEl.textContent = score;
-            livesEl.textContent = lives;
-            meteors = []; lasers = [];
-            gameState = 'PLAYING';
-            overlay.classList.add('hidden');
-            generateNewTarget();
-        }
-
-        function endGame(msg) {
-            gameState = 'GAMEOVER';
-            overlayTitle.textContent = "FIN DE MISSION";
-            overlayMsg.innerHTML = `${msg}<br><br><b>Score Final : ${score}</b>`;
-            startBtn.textContent = "REESSAYER";
-            overlay.classList.remove('hidden');
-        }
-
         function update() {
             if (gameState !== 'PLAYING') return;
 
+            // Mouvements clavier
+            if (keys['ArrowLeft'] && ship.x > 0) ship.x -= ship.speed;
+            if (keys['ArrowRight'] && ship.x < canvas.width - ship.w) ship.x += ship.speed;
+            if (keys['ArrowUp'] && ship.y > 0) ship.y -= ship.speed;
+            if (keys['ArrowDown'] && ship.y < canvas.height - ship.h) ship.y += ship.speed;
+
             const now = Date.now();
-            if (now - lastMeteorTime > 1500) {
+            if (now - lastMeteorTime > 2000) {
                 createMeteor();
                 lastMeteorTime = now;
             }
 
-            lasers.forEach((l, li) => {
-                l.y -= 10;
-                if (l.y < -50) lasers.splice(li, 1);
-            });
+            // Lasers
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                lasers[i].y -= 12;
+                if (lasers[i].y < -50) lasers.splice(i, 1);
+            }
 
-            meteors.forEach((m, mi) => {
+            // Meteors
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                let m = meteors[i];
                 m.y += m.speed;
-                
+
+                // Collision avec le vaisseau
+                if (ship.x < m.x + m.w && ship.x + ship.w > m.x && ship.y < m.y + m.h && ship.y + ship.h > m.y) {
+                    lives--;
+                    livesEl.textContent = lives;
+                    meteors.splice(i, 1);
+                    playExplosionSound();
+                    if (lives <= 0) endGame("VAISSEAU DÉTRUIT !");
+                    continue;
+                }
+
                 // Collision Laser
-                lasers.forEach((l, li) => {
+                for (let j = lasers.length - 1; j >= 0; j--) {
+                    let l = lasers[j];
                     if (l.x < m.x + m.w && l.x + l.w > m.x && l.y < m.y + m.h && l.y + l.h > m.y) {
                         if (m.value === targetAnswer) {
                             score += 10;
                             scoreEl.textContent = score;
+                            playExplosionSound();
                             generateNewTarget();
-                            meteors = []; // Nettoie pour la suite
+                            meteors = []; // Efface les autres pour le nouveau calcul
                         } else {
+                            // Erreur : on perd une vie et le météore explose quand même
                             lives--;
                             livesEl.textContent = lives;
+                            playExplosionSound();
                         }
-                        lasers.splice(li, 1);
-                        meteors.splice(mi, 1);
+                        lasers.splice(j, 1);
+                        meteors.splice(i, 1);
+                        if (lives <= 0) endGame("ERREUR DE CALCUL !");
+                        break;
                     }
-                });
+                }
 
-                if (m.y > canvas.height) {
+                // Sortie d'écran
+                if (m && m.y > canvas.height) {
                     if (m.value === targetAnswer) {
                         lives--;
                         livesEl.textContent = lives;
                         generateNewTarget();
                     }
-                    meteors.splice(mi, 1);
+                    meteors.splice(i, 1);
+                    if (lives <= 0) endGame("CIBLE MANQUÉE !");
                 }
-
-                if (lives <= 0) endGame("TON VAISSEAU EST TROP ABÎMÉ !");
-            });
+            }
         }
 
         function draw() {
@@ -230,19 +276,42 @@
             meteors.forEach(m => {
                 ctx.drawImage(m.img, m.x, m.y, m.w, m.h);
                 ctx.fillStyle = "white";
-                ctx.font = "bold 24px Arial";
+                ctx.font = "bold 28px Arial";
                 ctx.textAlign = "center";
-                ctx.fillText(m.value, m.x + m.w/2, m.y + m.h/2 + 8);
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = 4;
+                ctx.fillText(m.value, m.x + m.w/2, m.y + m.h/2 + 10);
+                ctx.shadowBlur = 0;
             });
 
             update();
             requestAnimationFrame(draw);
         }
 
+        function startGame() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            score = 0; lives = 3;
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+            meteors = []; lasers = [];
+            ship.x = canvas.width / 2 - ship.w / 2;
+            ship.y = canvas.height - 100;
+            gameState = 'PLAYING';
+            overlay.classList.add('hidden');
+            generateNewTarget();
+        }
+
+        function endGame(reason) {
+            gameState = 'GAMEOVER';
+            document.getElementById('overlay-title').textContent = "FIN DE MISSION";
+            document.getElementById('overlay-msg').innerHTML = `<span class='text-red-400 font-bold'>${reason}</span><br><br>Ton score : ${score}`;
+            startBtn.textContent = "RECOMMENCER";
+            overlay.classList.remove('hidden');
+        }
+
         startBtn.addEventListener('click', startGame);
         homeBtn.addEventListener('click', () => {
             gameState = 'START';
-            overlayTitle.textContent = "PAUSE";
             overlay.classList.remove('hidden');
         });
 
