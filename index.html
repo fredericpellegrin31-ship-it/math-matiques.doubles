@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mission Calcul Mental - CE1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0b0e14; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+        canvas { display: block; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; z-index: 10; }
+        .hud-panel { background: rgba(0, 0, 0, 0.7); padding: 10px 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; border: 1px solid #3b82f6; pointer-events: auto; }
+        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
+        .hidden { display: none !important; }
+        .target-box { background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; padding: 10px 30px; margin: 10px; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="flex justify-between p-4">
+            <div class="hud-panel">SCORE: <span id="score" class="text-yellow-400 font-bold">0</span></div>
+            <div id="target-display" class="target-box">PRÊT ?</div>
+            <div class="hud-panel">VIES: <span id="lives" class="text-red-500 font-bold">3</span></div>
+        </div>
+        <button id="home-btn" class="absolute bottom-4 left-4 p-3 bg-gray-800 rounded-full border border-white/30 pointer-events-auto">🏠</button>
+    </div>
+
+    <div id="overlay" class="menu-overlay">
+        <h1 id="overlay-title" class="text-5xl font-black text-blue-500 mb-6 tracking-tighter italic">MISSION CALCUL</h1>
+        <div id="overlay-msg" class="text-center text-xl mb-8 px-6">Choisis ta mission, pilote !</div>
+        
+        <div class="flex flex-col gap-4 mb-8 w-64 pointer-events-auto">
+            <label class="text-sm uppercase text-blue-300 font-bold">Type de Mission :</label>
+            <select id="mode-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white">
+                <option value="complements">Compléments à 10</option>
+                <option value="doubles">Les Doubles</option>
+                <option value="moities">Les Moitiés</option>
+            </select>
+
+            <label class="text-sm uppercase text-blue-300 font-bold">Niveau (Max) :</label>
+            <select id="difficulty-select" class="p-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white">
+                <option value="10">Jusqu'à 10</option>
+                <option value="20">Jusqu'à 20</option>
+                <option value="100">Jusqu'à 100</option>
+            </select>
+        </div>
+
+        <button id="start-btn" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xl rounded-full transition-transform active:scale-90 border-b-4 border-blue-800 pointer-events-auto">
+            LANCER LA MISSION
+        </button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const targetEl = document.getElementById('target-display');
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayMsg = document.getElementById('overlay-msg');
+        const startBtn = document.getElementById('start-btn');
+        const homeBtn = document.getElementById('home-btn');
+        const modeSelect = document.getElementById('mode-select');
+        const difficultySelect = document.getElementById('difficulty-select');
+
+        // Assets
+        const shipImg = new Image(); shipImg.src = 'playerShip1_red.png';
+        const laserImg = new Image(); laserImg.src = 'laserRed13.png';
+        const meteorImages = [
+            'meteorBrown_big1.png', 'meteorBrown_big2.png',
+            'meteorBrown_big3.png', 'meteorBrown_big4.png'
+        ].map(src => { const img = new Image(); img.src = src; return img; });
+
+        let gameState = 'START';
+        let score = 0, lives = 3, targetAnswer = 0;
+        let meteors = [], lasers = [], particles = [];
+        let ship = { x: 0, y: 0, w: 60, h: 60 };
+        let lastMeteorTime = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ship.y = canvas.height - 80;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // LOGIQUE DE CALCUL
+        function generateNewTarget() {
+            const mode = modeSelect.value;
+            const max = parseInt(difficultySelect.value);
+            let question = "";
+
+            if (mode === "complements") {
+                let n = Math.floor(Math.random() * 10);
+                targetAnswer = 10 - n;
+                question = `${n} + ? = 10`;
+            } else if (mode === "doubles") {
+                let n;
+                if (max <= 20) n = Math.floor(Math.random() * (max/2)) + 1;
+                else n = Math.floor(Math.random() * 50) + 1;
+                targetAnswer = n * 2;
+                question = `Double de ${n}`;
+            } else if (mode === "moities") {
+                let n;
+                if (max <= 20) n = (Math.floor(Math.random() * (max/2)) + 1) * 2;
+                else n = (Math.floor(Math.random() * 50) + 1) * 2;
+                targetAnswer = n / 2;
+                question = `Moitié de ${n}`;
+            }
+
+            targetEl.textContent = question;
+        }
+
+        function createMeteor() {
+            const size = 70;
+            // Une chance sur 3 que ce soit la bonne réponse
+            const isCorrect = Math.random() < 0.35;
+            let val;
+            if (isCorrect) val = targetAnswer;
+            else {
+                val = Math.floor(Math.random() * (parseInt(difficultySelect.value) + 5));
+                if (val === targetAnswer) val++;
+            }
+
+            meteors.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                w: size, h: size,
+                speed: 2 + Math.random() * 2,
+                value: val,
+                img: meteorImages[Math.floor(Math.random() * meteorImages.length)]
+            });
+        }
+
+        // TOUCH / MOUSE CONTROLS
+        const handleMove = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            ship.x = clientX - ship.w / 2;
+        };
+        const handleShoot = () => {
+            if (gameState === 'PLAYING') {
+                lasers.push({ x: ship.x + ship.w / 2 - 4, y: ship.y, w: 9, h: 33 });
+            }
+        };
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchstart', (e) => { handleMove(e); handleShoot(); });
+        window.addEventListener('mousedown', handleShoot);
+
+        function startGame() {
+            score = 0; lives = 3;
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+            meteors = []; lasers = [];
+            gameState = 'PLAYING';
+            overlay.classList.add('hidden');
+            generateNewTarget();
+        }
+
+        function endGame(msg) {
+            gameState = 'GAMEOVER';
+            overlayTitle.textContent = "FIN DE MISSION";
+            overlayMsg.innerHTML = `${msg}<br><br><b>Score Final : ${score}</b>`;
+            startBtn.textContent = "REESSAYER";
+            overlay.classList.remove('hidden');
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            const now = Date.now();
+            if (now - lastMeteorTime > 1500) {
+                createMeteor();
+                lastMeteorTime = now;
+            }
+
+            lasers.forEach((l, li) => {
+                l.y -= 10;
+                if (l.y < -50) lasers.splice(li, 1);
+            });
+
+            meteors.forEach((m, mi) => {
+                m.y += m.speed;
+                
+                // Collision Laser
+                lasers.forEach((l, li) => {
+                    if (l.x < m.x + m.w && l.x + l.w > m.x && l.y < m.y + m.h && l.y + l.h > m.y) {
+                        if (m.value === targetAnswer) {
+                            score += 10;
+                            scoreEl.textContent = score;
+                            generateNewTarget();
+                            meteors = []; // Nettoie pour la suite
+                        } else {
+                            lives--;
+                            livesEl.textContent = lives;
+                        }
+                        lasers.splice(li, 1);
+                        meteors.splice(mi, 1);
+                    }
+                });
+
+                if (m.y > canvas.height) {
+                    if (m.value === targetAnswer) {
+                        lives--;
+                        livesEl.textContent = lives;
+                        generateNewTarget();
+                    }
+                    meteors.splice(mi, 1);
+                }
+
+                if (lives <= 0) endGame("TON VAISSEAU EST TROP ABÎMÉ !");
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Ship
+            ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+
+            // Lasers
+            lasers.forEach(l => ctx.drawImage(laserImg, l.x, l.y, l.w, l.h));
+
+            // Meteors
+            meteors.forEach(m => {
+                ctx.drawImage(m.img, m.x, m.y, m.w, m.h);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 24px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(m.value, m.x + m.w/2, m.y + m.h/2 + 8);
+            });
+
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        startBtn.addEventListener('click', startGame);
+        homeBtn.addEventListener('click', () => {
+            gameState = 'START';
+            overlayTitle.textContent = "PAUSE";
+            overlay.classList.remove('hidden');
+        });
+
+        draw();
+    </script>
+</body>
+</html>
