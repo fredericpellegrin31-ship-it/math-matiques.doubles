@@ -169,7 +169,6 @@
         </div>
     </div>
 
-    <!-- Écran d'accueil -->
     <div id="overlay">
         <h1 id="overlay-title" class="text-5xl font-black text-white mb-6 italic uppercase text-center">Les Doubles</h1>
         <p id="overlay-msg" class="text-blue-200 mb-4 text-xl text-center px-4">Calcule le double du nombre affiché !</p>
@@ -306,17 +305,14 @@
             const correctDouble = targetNum * 2;
             const prob = Math.random();
             
-            // 20% de chance d'avoir la bonne réponse
             if (prob < 0.20) {
                 val = correctDouble;
             } 
-            // 70% de chance d'avoir un leurre dans la même dizaine que le double
             else if (prob < 0.90) {
                 const dizaine = Math.floor(correctDouble / 10) * 10;
                 let attempt = dizaine + Math.floor(Math.random() * 10);
                 val = Math.max(0, attempt);
             }
-            // 10% de chance d'avoir un nombre aléatoire dans la portée possible des doubles
             else {
                 val = Math.floor(Math.random() * (maxRange * 2 + 1));
             }
@@ -335,7 +331,6 @@
         }
 
         function generateNewTarget() {
-            // On prend un nombre entre 1 et maxRange
             targetNum = Math.floor(Math.random() * maxRange) + 1;
             targetNumEl.textContent = targetNum;
         }
@@ -360,9 +355,9 @@
                 m.rotation += m.rotSpeed;
 
                 if (ship.x < m.x + m.w && ship.x + ship.w > m.x && ship.y < m.y + m.h && ship.y + ship.h > m.y) {
-                    createExplosion(ship.x + ship.w/2, ship.y + ship.h/2, '#f87171');
+                    createExplosion(ship.x + ship.w/2, ship.y + ship.h/2, '#ef4444');
                     playSound('explosion_bad');
-                    floatingTexts.push({x: ship.x, y: ship.y, text: 'CHOC !', color: '#f87171', life: 1.5});
+                    floatingTexts.push({x: ship.x, y: ship.y, text: 'CHOC !', color: '#ef4444', life: 1.5});
                     lives--;
                     livesEl.textContent = lives;
                     meteors.splice(i, 1);
@@ -377,14 +372,16 @@
                         if (m.val === targetNum * 2) {
                             score += 10;
                             generateNewTarget();
-                            createExplosion(m.x + m.w/2, m.y + m.h/2, '#4ade80');
+                            createExplosion(m.x + m.w/2, m.y + m.h/2, '#22c55e');
                             playSound('explosion_good');
-                            floatingTexts.push({x: m.x, y: m.y, text: 'BRAVO', color: '#4ade80', life: 1.0});
+                            // Affichage explicite du gain de points
+                            floatingTexts.push({x: m.x, y: m.y, text: '+10', color: '#4ade80', life: 1.2});
                         } else {
                             score = Math.max(0, score - 5);
-                            createExplosion(m.x + m.w/2, m.y + m.h/2, '#f87171');
+                            createExplosion(m.x + m.w/2, m.y + m.h/2, '#ef4444');
                             playSound('explosion_bad');
-                            floatingTexts.push({x: m.x, y: m.y, text: 'ERREUR', color: '#f87171', life: 1.0});
+                            // Affichage explicite de la perte de points
+                            floatingTexts.push({x: m.x, y: m.y, text: '-5', color: '#f87171', life: 1.2});
                         }
                         scoreEl.textContent = score;
                         meteors.splice(i, 1); lasers.splice(j, 1);
@@ -400,7 +397,7 @@
             });
 
             floatingTexts.forEach((t, i) => {
-                t.y -= 1.2; t.life -= 0.02;
+                t.y -= 1.5; t.life -= 0.02;
                 if (t.life <= 0) floatingTexts.splice(i, 1);
             });
         }
@@ -452,7 +449,7 @@
             floatingTexts.forEach(t => {
                 ctx.globalAlpha = t.life;
                 ctx.fillStyle = t.color;
-                ctx.font = "bold 24px Arial";
+                ctx.font = "bold 32px Arial"; // Augmentation de la taille pour meilleure lisibilité
                 ctx.textAlign = "center";
                 ctx.fillText(t.text, t.x + 35, t.y);
             });
